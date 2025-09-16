@@ -22,6 +22,7 @@ require("lazy").setup({
   { "nvim-lua/plenary.nvim" },
   { "nvim-telescope/telescope.nvim", tag = "0.1.5" },
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+  { "nvim-treesitter/nvim-treesitter-textobjects" },
   
   { "neovim/nvim-lspconfig" },
   { "williamboman/mason.nvim" },
@@ -56,6 +57,9 @@ require("lazy").setup({
 
   { "windwp/nvim-autopairs" },
   { "lukas-reineke/indent-blankline.nvim", main = "ibl" },
+
+  { "MeanderingProgrammer/render-markdown.nvim" },
+
 })
 
 local o = vim.opt
@@ -213,9 +217,20 @@ vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Find buffers" })
 vim.keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "Help tags" })
 
 require("nvim-treesitter.configs").setup({
-  ensure_installed = {"go", "lua", "python", "cpp", "json", "html", "css", "javascript", "typescript" },
-  highlight = { enable = true },
-  indent    = { enable = true },
+  ensure_installed = {"go", "lua", "python", "cpp", "json", "html", "css", "javascript", "typescript",
+                      "markdown", "markdown_inline", "yaml", "html"
+    },
+  highlight = {
+    enable = true,
+    additional_vim_regex_highlighting = false,
+  },
+  indent = { enable = true },
+  -- Inject LaTeX inside markdown
+  playground = { enable = true },
+  incremental_selection = { enable = true },
+  context_commentstring = { enable = true },
+  -- Add injection for math blocks
+  autotag = { enable = true },
 })
 
 vim.g.loaded_netrw = 1
@@ -380,11 +395,33 @@ vim.keymap.set("n", "<C-v>", '"+p', { desc = "Paste from system clipboard" })
 
 vim.keymap.set("i", "<C-v>", '<C-r>+', { desc = "Paste from system clipboard" })
 
+-- Open Qalculate in a vertical split on the right (30 columns wide)
+vim.keymap.set("n", "<leader>ca", function()
+  vim.cmd("vert 30split | terminal qalc")
+  vim.cmd("wincmd L") -- move the terminal split to the far right
+end, { noremap = true, silent = true, desc = "Open Qalculate in a right split" })
+
+
+
 
 vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = "*.go",
   callback = function()
     vim.cmd("%!formattag")
   end,
+})
+
+
+require('render-markdown').setup({
+    latex = {
+        enabled = true,
+        render_modes = { 'n','c','t'},
+        converter = 'latex2text',
+        highlight = 'RenderMarkdownMath',
+        position = 'center',
+        top_pad = 0,
+        bottom_pad = 0,
+    },
+    render_modes = true
 })
 
